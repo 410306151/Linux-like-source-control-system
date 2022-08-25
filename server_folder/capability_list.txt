@@ -1,0 +1,13 @@
+test1.txt|Barbie|AOS-students|rwrwrw/
+test2.txt|Barbie|AOS-students|rwrwrw/
+test3.txt|Barbie|AOS-students|rwrwrw/
+test4.txt|Barbie|AOS-students|rwrw--/
+test5.txt|Barbie|AOS-students|r-r-r-/
+temp1.txt|Ken|AOS-students|rw----/
+temp2.txt|user1|CSE-students|rwrwrw/
+temp3.txt|user1|CSE-students|rwrwrw/
+temp4.txt|user1|CSE-students|rwrwrw/
+tempnew.txt|Ken|AOS-students|rw----/
+1234.txt|Ken|AOS-students|rw----/
+Hello.txt|Ken|AOS-students|rwr---/
+error.txt|Ken|AOS-students|rwrwrw/

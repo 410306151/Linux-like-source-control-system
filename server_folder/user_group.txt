@@ -1,0 +1,6 @@
+Ken|AOS-students/
+Barbie|AOS-students/
+classmate1|AOS-students/
+user1|CSE-students/
+user2|CSE-students/
+user3|CSE-students/
