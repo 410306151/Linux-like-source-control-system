@@ -495,7 +495,7 @@ void *serve_client(void *arg){
     char *result, *file_data = malloc(buffer_size * sizeof(char));
     int packet_len, err_code;
     int fd;
-    int *clientfd = (int*)arg;
+    int clientfd = (intptr_t)arg;
 
     // create server folder
     if(stat(server_folder_path, &st) == -1) {
@@ -506,7 +506,7 @@ void *serve_client(void *arg){
 
     // client user login
     while(1){
-        packet_len = recv(*clientfd, received, buffer_size, 0);
+        packet_len = recv(clientfd, received, buffer_size, 0);
         result = cut_packet_string(received, packet_len);
         strcpy(user.user, result);
         free(result);
@@ -520,10 +520,10 @@ void *serve_client(void *arg){
         // get user's group
         strcpy(user.user_group, find_user_group(fd, user.user));
         if(strcmp(user.user_group, "") == 0){
-            send(*clientfd, "Fail", strlen("Fail"), 0);
+            send(clientfd, "Fail", strlen("Fail"), 0);
         }else{
             // end of finding user's group
-            send(*clientfd, "Success", strlen("Success"), 0);
+            send(clientfd, "Success", strlen("Success"), 0);
             close(fd);
             break;
         }
@@ -532,11 +532,12 @@ void *serve_client(void *arg){
     // start user action
     while(1){
         // checked user, start the command section
-        packet_len = recv(*clientfd, received, buffer_size, 0);
+        packet_len = recv(clientfd, received, buffer_size, 0);
         result = cut_packet_string(received, packet_len);
         if(strcmp(result, "exit") == 0){
-            free(clientfd);
-            return NULL;
+            //free(clientfd);
+            //return NULL;
+            break;
         }else if(strcmp(result, "error") == 0){
             int a = 10 / 0;
         }
@@ -544,47 +545,47 @@ void *serve_client(void *arg){
         if(strcmp(token, "create") == 0){
             err_code = create_file(user);
             if(err_code == -1){
-                send(*clientfd, "Create-1", strlen("Create-1"), 0);
+                send(clientfd, "Create-1", strlen("Create-1"), 0);
             }else if(err_code == 0){
-                send(*clientfd, "Create0", strlen("Create0"), 0);
+                send(clientfd, "Create0", strlen("Create0"), 0);
             }else if(err_code == 1){
-                send(*clientfd, "Create1", strlen("Create1"), 0);
+                send(clientfd, "Create1", strlen("Create1"), 0);
             }
         }else if(strcmp(token, "read") == 0){
-            err_code = read_file(user, *clientfd);
+            err_code = read_file(user, clientfd);
             if(err_code == -1){
-                send(*clientfd, "Read-1", strlen("Read-1"), 0);
+                send(clientfd, "Read-1", strlen("Read-1"), 0);
             }else if(err_code == 0){
-                send(*clientfd, "Read0", strlen("Read0"), 0);
+                send(clientfd, "Read0", strlen("Read0"), 0);
             }else if(err_code == 2){
-                send(*clientfd, "Read2", strlen("Read2"), 0);
+                send(clientfd, "Read2", strlen("Read2"), 0);
             }else if(err_code == 1){
                 // if you want to do something with a successful action
             }
         }else if(strcmp(token, "write") == 0){
-            err_code = write_file(user, *clientfd);
+            err_code = write_file(user, clientfd);
             if(err_code == -1){
-                send(*clientfd, "Write-1", strlen("Write-1"), 0);
+                send(clientfd, "Write-1", strlen("Write-1"), 0);
             }else if(err_code == 0){
-                send(*clientfd, "Write0", strlen("Write0"), 0);
+                send(clientfd, "Write0", strlen("Write0"), 0);
             }else if(err_code == 1){
-                send(*clientfd, "Write1", strlen("Write1"), 0);
+                send(clientfd, "Write1", strlen("Write1"), 0);
             }else if(err_code == 2){
-                send(*clientfd, "Write2", strlen("Write2"), 0);
+                send(clientfd, "Write2", strlen("Write2"), 0);
             }
         }else if(strcmp(token, "changemode") == 0){
             err_code = change_file_mode(user);
             if(err_code == -1){
-                send(*clientfd, "Change-1", strlen("Change-1"), 0);
+                send(clientfd, "Change-1", strlen("Change-1"), 0);
             }else if(err_code == 0){
-                send(*clientfd, "Change0", strlen("Change0"), 0);
+                send(clientfd, "Change0", strlen("Change0"), 0);
             }else if(err_code == 1){
-                send(*clientfd, "Change1", strlen("Change1"), 0);
+                send(clientfd, "Change1", strlen("Change1"), 0);
             }else if(err_code == 2){
-                send(*clientfd, "Change2", strlen("Change2"), 0);
+                send(clientfd, "Change2", strlen("Change2"), 0);
             }
         }else{
-            send(*clientfd, "Unknown0", strlen("Unknown0"), 0);
+            send(clientfd, "Unknown0", strlen("Unknown0"), 0);
         }
     }
 }
@@ -592,7 +593,7 @@ void *serve_client(void *arg){
 void main(int argc, char *argv[]){
     struct sockaddr_in info, client_info;
     int sockfd, client_number = 0;
-    int *clientfd;
+    int clientfd;
     pid_t pid;
     pthread_t threads[10];
     int rc, counter = 0;
@@ -620,13 +621,8 @@ void main(int argc, char *argv[]){
         exit(1);
     }
     while(1){
-        clientfd = malloc(sizeof(int));
-        *clientfd = accept(sockfd, (struct sockaddr *)&client_info, (socklen_t *)&client_number);
-        if(*clientfd == -1) {
-            perror("accept");;
-            exit(1);
-        }
-        rc = pthread_create(&threads[counter], NULL, serve_client, clientfd);
+        clientfd = accept(sockfd, (struct sockaddr *)&client_info, (socklen_t *)&client_number);
+        rc = pthread_create(&threads[counter], NULL, serve_client, (void *)(intptr_t)clientfd);
         if (rc){
             printf("ERROR; return code from pthread_create() is %d\n", rc);
             exit(-1);
